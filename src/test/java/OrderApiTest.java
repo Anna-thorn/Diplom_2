@@ -1,4 +1,5 @@
 import api.*;
+import io.qameta.allure.*;
 import io.qameta.allure.junit4.*;
 import io.restassured.response.Response;
 import org.junit.*;
@@ -35,6 +36,7 @@ public class OrderApiTest {
 
     @Test
     @DisplayName("Создание заказа без авторизации с ингредиентами")
+    @Description("Система должна разрешать создание заказа")
     public void createOrderWithoutAuthWithIngredients() {
         accessToken = null;
         Response response = orderApi.createOrder(ingredients, null);
@@ -46,6 +48,7 @@ public class OrderApiTest {
 
     @Test
     @DisplayName("Создание заказа без авторизации без ингредиентов")
+    @Description("Система требует обязательного указания ингредиентов и не создает заказ")
     public void createOrderWithoutAuthWithoutIngredients() {
         accessToken = null;
         Response response = orderApi.createOrder(new String[]{}, null);
@@ -57,6 +60,7 @@ public class OrderApiTest {
 
     @Test
     @DisplayName("Создание заказа с авторизацией и ингредиентами")
+    @Description("Система должна разрешать создание заказа")
     public void createOrderWithAuthWithIngredients() {
         Response response = orderApi.createOrder(ingredients, accessToken);
         response.then()
@@ -67,6 +71,7 @@ public class OrderApiTest {
 
     @Test
     @DisplayName("Создание заказа с авторизацией без ингредиентов")
+    @Description("Система требует обязательного указания ингредиентов и не создает заказ")
     public void createOrderWithAuthWithoutIngredients() {
         Response response = orderApi.createOrder(new String[]{}, accessToken);
         response.then()
@@ -77,6 +82,7 @@ public class OrderApiTest {
 
     @Test
     @DisplayName("Создание заказа с неверным хешем ингредиентов")
+    @Description("Ожидается ошибка")
     public void createOrderWithInvalidIngredientHash() {
         Response response = orderApi.createOrder(new String[]{"invalid_ingredient_hash_123"}, accessToken);
         response.then()
@@ -86,6 +92,7 @@ public class OrderApiTest {
 
     @Test
     @DisplayName("Получение заказов авторизованного пользователя")
+    @Description("Система успешно возвращает историю заказов")
     public void getOrdersForAuthorizedUser() {
         orderApi.createOrder(ingredients, accessToken);
         Response response = orderApi.getUserOrders(accessToken);
@@ -96,7 +103,8 @@ public class OrderApiTest {
     }
 
     @Test
-    @DisplayName("Получение заказов неавторизованного пользователя")
+    @DisplayName("Получение списка заказов неавторизованного пользователя")
+    @Description("Система требует авторизацию")
     public void getOrdersForUnauthorizedUser() {
         accessToken = null;
         Response response = orderApi.getUserOrdersWithoutAuth();

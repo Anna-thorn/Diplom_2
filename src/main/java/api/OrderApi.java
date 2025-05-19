@@ -1,24 +1,19 @@
 package api;
 
 import io.qameta.allure.*;
-import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import java.util.*;
-import static io.restassured.RestAssured.given;
 
 /**
  * Класс с методами API для заказов
  */
-public class OrderApi {
-    private static final String BASE_URL = "https://stellarburgers.nomoreparties.site";
+public class OrderApi extends BaseApi {
     private static final String ORDERS_ENDPOINT = "/api/orders";
 
     @Step("Создание заказа")
     public Response createOrder(String[] ingredients, String accessToken) {
-        RequestSpecification request = given()
-                .baseUri(BASE_URL)
-                .contentType(ContentType.JSON);
+        RequestSpecification request = getBaseRequestSpec();
 
         if (accessToken != null && !accessToken.isEmpty()) {
             request.header("Authorization", accessToken);
@@ -31,8 +26,7 @@ public class OrderApi {
 
     @Step("Получение списка заказов пользователя")
     public Response getUserOrders(String accessToken) {
-        return given()
-                .baseUri(BASE_URL)
+        return getBaseRequestSpec()
                 .header("Authorization", accessToken)
                 .when()
                 .get(ORDERS_ENDPOINT);
@@ -40,8 +34,7 @@ public class OrderApi {
 
     @Step("Попытка получить заказы без авторизации")
     public Response getUserOrdersWithoutAuth() {
-        return given()
-                .baseUri(BASE_URL)
+        return getBaseRequestSpec()
                 .when()
                 .get(ORDERS_ENDPOINT);
     }

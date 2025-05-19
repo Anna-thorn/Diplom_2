@@ -1,13 +1,12 @@
-import io.qameta.allure.junit4.DisplayName;
+import io.qameta.allure.junit4.*;
+import io.qameta.allure.*;
 import io.restassured.response.Response;
-import api.UserApi;
-import models.User;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import java.util.UUID;
+import org.junit.*;
 import static org.apache.http.HttpStatus.*;
 import static org.junit.Assert.*;
+
+import api.UserApi;
+import models.User;
 
 /**
  * Проверки обновления данных
@@ -30,7 +29,8 @@ public class UserUpdateApiTest {
 
 
     @Test
-    @DisplayName("Обновление email с авторизацией")
+    @DisplayName("Обновление email")
+    @Description("Проверка успешного обновления email авторизованного пользователя")
     public void updateEmailWithAuth() {
         String newEmail = User.getRandomUser().getEmail();
         User updateData = new User(newEmail, null, null);
@@ -42,7 +42,8 @@ public class UserUpdateApiTest {
     }
 
     @Test
-    @DisplayName("Обновление пароля с авторизацией")
+    @DisplayName("Обновление пароля")
+    @Description("Проверка смены пароля и последующей авторизации с новым паролем")
     public void updatePasswordWithAuth() {
         User randomUser = User.getRandomUser();
         String newPassword = randomUser.getPassword();
@@ -60,7 +61,8 @@ public class UserUpdateApiTest {
     }
 
     @Test
-    @DisplayName("Обновление имени с авторизацией")
+    @DisplayName("Обновление имени")
+    @Description("Проверка изменения имени пользователя")
     public void updateNameWithAuth() {
         User randomUser = User.getRandomUser();
         String newName = randomUser.getName();
@@ -73,7 +75,8 @@ public class UserUpdateApiTest {
     }
 
     @Test
-    @DisplayName("Обновление нескольких полей одновременно")
+    @DisplayName("Обновление нескольких полей")
+    @Description("Комплексная проверка одновременного обновления email, пароля и имени")
     public void updateMultipleFieldsWithAuth() {
         User randomData = User.getRandomUser();
         String newEmail = randomData.getEmail();
@@ -98,6 +101,7 @@ public class UserUpdateApiTest {
 
     @Test
     @DisplayName("Обновление без авторизации")
+    @Description("Проверка защиты от неавторизованных запросов")
     public void updateWithoutAuth() {
         User newData = User.getRandomUser();
         Response response = userApi.updateUserData("", newData);
@@ -111,6 +115,7 @@ public class UserUpdateApiTest {
 
     @Test
     @DisplayName("Обновление на занятый email")
+    @Description("Проверка валидации уникальности email при обновлении данных")
     public void updateToExistingEmail() {
         User anotherUser = User.getRandomUser();
         userApi.createUser(anotherUser);

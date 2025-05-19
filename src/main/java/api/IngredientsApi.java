@@ -3,22 +3,19 @@ package api;
 import io.qameta.allure.*;
 import io.restassured.response.Response;
 import java.util.*;
-import static io.restassured.RestAssured.given;
 import static org.apache.http.HttpStatus.*;
 
 /**
  * Класс с методами API для ингредиентов.
  */
-public class IngredientsApi {
-    private static final String BASE_URL = "https://stellarburgers.nomoreparties.site";
-    private static final String INGREDIENTS = "/api/ingredients";
+public class IngredientsApi extends BaseApi {
+    private static final String INGREDIENTS_ENDPOINT = "/api/ingredients";
 
     @Step("Получение списка всех ингредиентов")
     public Response getAllIngredients() {
-        return given()
-                .baseUri(BASE_URL)
+        return getBaseRequestSpec()
                 .when()
-                .get(INGREDIENTS);
+                .get(INGREDIENTS_ENDPOINT);
     }
     @Step("Получение двух разных ингредиентов (bun и main/sauce)")
     public String[] getTwoIngredients() {
