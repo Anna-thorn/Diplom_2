@@ -3,8 +3,9 @@ import io.qameta.allure.*;
 import io.qameta.allure.junit4.*;
 import io.restassured.response.Response;
 import org.junit.*;
-import static org.hamcrest.Matchers.*;
 import static org.apache.http.HttpStatus.*;
+import org.assertj.core.api.SoftAssertions;
+import java.util.List;
 
 import models.User;
 
@@ -40,10 +41,17 @@ public class OrderApiTest {
     public void createOrderWithoutAuthWithIngredients() {
         accessToken = null;
         Response response = orderApi.createOrder(ingredients, null);
-        response.then()
-                .statusCode(SC_OK)
-                .body("success", equalTo(true))
-                .body("order.number", notNullValue());
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode())
+                .as("Неверный код ответа")
+                .isEqualTo(SC_OK);
+        softly.assertThat((Boolean) response.path("success"))
+                .as("Поле success должно быть true")
+                .isTrue();
+        softly.assertThat((Integer) response.path("order.number"))
+                .as("Номер заказа должен присутствовать")
+                .isNotNull();
+        softly.assertAll();
     }
 
     @Test
@@ -51,11 +59,19 @@ public class OrderApiTest {
     @Description("Система требует обязательного указания ингредиентов и не создает заказ")
     public void createOrderWithoutAuthWithoutIngredients() {
         accessToken = null;
-        Response response = orderApi.createOrder(new String[]{}, null);
-        response.then()
-                .statusCode(SC_BAD_REQUEST)
-                .body("success", equalTo(false))
-                .body("message", equalTo(ERROR_MESSAGE_NO_INGREDIENTS));
+        String[] emptyIngredients = new String[]{};
+        Response response = orderApi.createOrder(emptyIngredients, null);
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode())
+                .as("Неверный код ответа")
+                .isEqualTo(SC_BAD_REQUEST);
+        softly.assertThat((Boolean) response.path("success"))
+                .as("Поле success должно быть false")
+                .isFalse();
+        softly.assertThat((String) response.path("message"))
+                .as("Неверное сообщение об ошибке")
+                .isEqualTo(ERROR_MESSAGE_NO_INGREDIENTS);
+        softly.assertAll();
     }
 
     @Test
@@ -63,31 +79,51 @@ public class OrderApiTest {
     @Description("Система должна разрешать создание заказа")
     public void createOrderWithAuthWithIngredients() {
         Response response = orderApi.createOrder(ingredients, accessToken);
-        response.then()
-                .statusCode(SC_OK)
-                .body("success", equalTo(true))
-                .body("order.number", notNullValue());
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode())
+                .as("Неверный код ответа")
+                .isEqualTo(SC_OK);
+        softly.assertThat((Boolean) response.path("success"))
+                .as("Поле success должно быть true")
+                .isTrue();
+        softly.assertThat((Integer) response.path("order.number"))
+                .as("Проверка что номер заказа не null")
+                .isNotNull();
+        softly.assertAll();
     }
 
     @Test
     @DisplayName("Создание заказа с авторизацией без ингредиентов")
     @Description("Система требует обязательного указания ингредиентов и не создает заказ")
     public void createOrderWithAuthWithoutIngredients() {
-        Response response = orderApi.createOrder(new String[]{}, accessToken);
-        response.then()
-                .statusCode(SC_BAD_REQUEST)
-                .body("success", equalTo(false))
-                .body("message", equalTo(ERROR_MESSAGE_NO_INGREDIENTS));
+        String[] emptyIngredients = new String[]{};
+        Response response = orderApi.createOrder(emptyIngredients, accessToken);
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode())
+                .as("Неверный код ответа")
+                .isEqualTo(SC_BAD_REQUEST);
+        softly.assertThat((Boolean) response.path("success"))
+                .as("Поле success должно быть false")
+                .isFalse();
+        softly.assertThat((String) response.path("message"))
+                .as("Неверное сообщение об ошибке")
+                .isEqualTo(ERROR_MESSAGE_NO_INGREDIENTS);
+        softly.assertAll();
     }
 
     @Test
     @DisplayName("Создание заказа с неверным хешем ингредиентов")
     @Description("Ожидается ошибка")
     public void createOrderWithInvalidIngredientHash() {
-        Response response = orderApi.createOrder(new String[]{"invalid_ingredient_hash_123"}, accessToken);
-        response.then()
-                .statusCode(SC_INTERNAL_SERVER_ERROR)
-                .body(anything());
+        Response response = orderApi.createOrder(new String[]{"invalid_hash"}, accessToken);
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode())
+                .as("Неверный код ответа")
+                .isEqualTo(SC_INTERNAL_SERVER_ERROR);
+        softly.assertThat(response.getBody().asString())
+                .as("Тело ответа об ошибке должно быть не пустым")
+                .isNotEmpty();
+        softly.assertAll();
     }
 
     @Test
@@ -96,10 +132,17 @@ public class OrderApiTest {
     public void getOrdersForAuthorizedUser() {
         orderApi.createOrder(ingredients, accessToken);
         Response response = orderApi.getUserOrders(accessToken);
-        response.then()
-                .statusCode(SC_OK)
-                .body("success", equalTo(true))
-                .body("orders", not(empty()));
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode())
+                .as("Неверный код ответа")
+                .isEqualTo(SC_OK);
+        softly.assertThat((Boolean) response.path("success"))
+                .as("Поле success должно быть true")
+                .isTrue();
+        softly.assertThat((List<?>) response.path("orders"))
+                .as("Список заказов не должен быть пустым")
+                .isNotEmpty();
+        softly.assertAll();
     }
 
     @Test
@@ -108,10 +151,17 @@ public class OrderApiTest {
     public void getOrdersForUnauthorizedUser() {
         accessToken = null;
         Response response = orderApi.getUserOrdersWithoutAuth();
-        response.then()
-                .statusCode(SC_UNAUTHORIZED)
-                .body("success", equalTo(false))
-                .body("message", equalTo(ERROR_MESSAGE_UNAUTHORIZED));
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode())
+                .as("Неверный код ответа")
+                .isEqualTo(SC_UNAUTHORIZED);
+        softly.assertThat((Boolean) response.path("success"))
+                .as("Поле success должно быть false")
+                .isFalse();
+        softly.assertThat((String) response.path("message"))
+                .as("Неверное сообщение об ошибке")
+                .isEqualTo(ERROR_MESSAGE_UNAUTHORIZED);
+        softly.assertAll();
     }
 
     @After

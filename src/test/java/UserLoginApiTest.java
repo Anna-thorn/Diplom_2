@@ -3,7 +3,7 @@ import io.qameta.allure.junit4.*;
 import io.restassured.response.Response;
 import org.junit.*;
 import static org.apache.http.HttpStatus.*;
-import static org.junit.Assert.*;
+import org.assertj.core.api.SoftAssertions;
 
 import api.UserApi;
 import models.User;
@@ -32,10 +32,13 @@ public class UserLoginApiTest {
     @Description("Система корректно обрабатывает валидные учетные данные")
     public void loginWithExistingUserSuccessfully() {
         Response response = userApi.loginUser(existingUser);
-        assertEquals(SC_OK, response.statusCode());
-        assertTrue(response.jsonPath().getBoolean("success"));
-        assertNotNull("AccessToken должен быть в ответе",
-                response.jsonPath().getString("accessToken"));
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode()).isEqualTo(SC_OK);
+        softly.assertThat(response.jsonPath().getBoolean("success")).isTrue();
+        softly.assertThat(response.jsonPath().getString("accessToken"))
+                .describedAs("AccessToken должен быть в ответе")
+                .isNotNull();
+        softly.assertAll();
     }
 
     @Test
@@ -74,9 +77,12 @@ public class UserLoginApiTest {
     @Step("Проверка ответа при неудачной попытки авторизации")
     private void verifyFailedLogin(User invalidUser) {
         Response response = userApi.loginUser(invalidUser);
-        assertEquals(SC_UNAUTHORIZED, response.statusCode());
-        assertFalse(response.jsonPath().getBoolean("success"));
-        assertEquals(INCORRECT_EMAIL_OR_PASSWORD, response.jsonPath().getString("message"));
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode()).isEqualTo(SC_UNAUTHORIZED);
+        softly.assertThat(response.jsonPath().getBoolean("success")).isFalse();
+        softly.assertThat(response.jsonPath().getString("message"))
+                .isEqualTo(INCORRECT_EMAIL_OR_PASSWORD);
+        softly.assertAll();
     }
 
     @After

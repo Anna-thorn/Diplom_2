@@ -2,9 +2,9 @@ import io.qameta.allure.*;
 import io.qameta.allure.junit4.*;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.*;
 import static org.apache.http.HttpStatus.*;
-import static org.junit.Assert.*;
 
 import models.User;
 import api.UserApi;
@@ -32,8 +32,10 @@ public class UserCreationApiTest {
     public void createUserWithValidData() {
         testUser = User.getRandomUser();
         Response response = userApi.createUser(testUser);
-        assertEquals(SC_OK, response.statusCode());
-        verifySuccessResponse(response, testUser);
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode()).isEqualTo(SC_OK);
+        verifySuccessResponse(response, testUser, softly);
+        softly.assertAll();
         accessToken = response.jsonPath().getString("accessToken");
     }
 
@@ -44,8 +46,10 @@ public class UserCreationApiTest {
         testUser = User.getRandomUser();
         userApi.createUser(testUser);
         Response response = userApi.createUser(testUser);
-        assertEquals(SC_FORBIDDEN, response.statusCode());
-        verifyErrorResponse(response, USER_EXISTS);
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode()).isEqualTo(SC_FORBIDDEN);
+        verifyErrorResponse(response, USER_EXISTS, softly);
+        softly.assertAll();
     }
 
     @Test
@@ -74,35 +78,39 @@ public class UserCreationApiTest {
 
     // вспомогательные методы
     @Step("Проверка успешного ответа при создании пользователя")
-    private void verifySuccessResponse(Response response, User user) {
+    private void verifySuccessResponse(Response response, User user, SoftAssertions softly) {
         JsonPath json = response.jsonPath();
-        assertTrue(json.getBoolean("success"));
-        assertEquals(user.getEmail(), json.getString("user.email"));
-        assertEquals(user.getName(), json.getString("user.name"));
-        assertNotNull(json.getString("accessToken"));
-        assertNotNull(json.getString("refreshToken"));
+        softly.assertThat(json.getBoolean("success")).isTrue();
+        softly.assertThat(json.getString("user.email")).isEqualTo(user.getEmail());
+        softly.assertThat(json.getString("user.name")).isEqualTo(user.getName());
+        softly.assertThat(json.getString("accessToken")).isNotNull();
+        softly.assertThat(json.getString("refreshToken")).isNotNull();
     }
 
     @Step("Проверка ответа с ошибкой: {expectedMessage}")
-    private void verifyErrorResponse(Response response, String expectedMessage) {
+    private void verifyErrorResponse(Response response, String expectedMessage, SoftAssertions softly) {
         JsonPath json = response.jsonPath();
-        assertFalse(json.getBoolean("success"));
-        assertEquals(expectedMessage, json.getString("message"));
+        softly.assertThat(json.getBoolean("success")).isFalse();
+        softly.assertThat(json.getString("message")).isEqualTo(expectedMessage);
     }
 
     @Step("Проверка ошибки обязательных полей для пользователя")
     private void verifyRequiredFieldsError(User invalidUser) {
         Response response = userApi.createUser(invalidUser);
-        assertEquals(SC_FORBIDDEN, response.statusCode());
-        verifyErrorResponse(response, REQUIRED_FIELDS);
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(response.statusCode()).isEqualTo(SC_FORBIDDEN);
+        verifyErrorResponse(response, REQUIRED_FIELDS, softly);
+        softly.assertAll();
     }
 
     @After
     public void tearDown() {
         if (accessToken != null) {
             Response response = userApi.deleteUser(accessToken);
-            assertEquals(SC_ACCEPTED, response.statusCode());
-            assertTrue(response.jsonPath().getBoolean("success"));
+            SoftAssertions softly = new SoftAssertions();
+            softly.assertThat(response.statusCode()).isEqualTo(SC_ACCEPTED);
+            softly.assertThat(response.jsonPath().getBoolean("success")).isTrue();
+            softly.assertAll();
         }
     }
 }
