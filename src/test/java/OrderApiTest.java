@@ -4,6 +4,8 @@ import io.qameta.allure.junit4.*;
 import io.restassured.response.Response;
 import org.junit.*;
 import static org.apache.http.HttpStatus.*;
+import static org.hamcrest.Matchers.anything;
+
 import org.assertj.core.api.SoftAssertions;
 import java.util.List;
 
@@ -115,7 +117,7 @@ public class OrderApiTest {
     @DisplayName("Создание заказа с неверным хешем ингредиентов")
     @Description("Ожидается ошибка")
     public void createOrderWithInvalidIngredientHash() {
-        Response response = orderApi.createOrder(new String[]{"invalid_hash"}, accessToken);
+        Response response = orderApi.createOrder(new String[]{"invalid_ingredient_hash_123"}, accessToken);
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(response.statusCode())
                 .as("Неверный код ответа")
